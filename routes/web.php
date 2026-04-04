@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EnrollmentAdminController;
+use App\Http\Controllers\AdminUserController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -30,5 +31,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/inscricoes/{enrollment}/status', [EnrollmentAdminController::class, 'updateStatus'])->name('inscricoes.status');
 });
 
+//MANAGE ADMINS
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/administradores', [AdminUserController::class, 'index'])->name('admins.index');
+    Route::post('/administradores', [AdminUserController::class, 'store'])->name('admins.store');
+    Route::patch('/administradores/{user}/status', [AdminUserController::class, 'toggleStatus'])->name('admins.status');
+});
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';
