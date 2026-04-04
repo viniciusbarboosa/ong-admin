@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, GraduationCap, LayoutGrid } from 'lucide-react';
+import { BookOpen, Folder, GraduationCap, LayoutGrid, ClipboardCheck } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -12,22 +12,21 @@ const mainNavItems: NavItem[] = [
         title: 'Dashboard',
         url: '/dashboard',
         icon: LayoutGrid,
-    },{
+    }, {
         title: 'Cursos',
         url: '/cursos',
         icon: GraduationCap,
+    }, {
+        title: 'Inscrições',
+        url: '/inscricoes',
+        icon: ClipboardCheck, // Ícone de prancheta com check (ideal para aprovações)
     },
 ];
 
 const footerNavItems: NavItem[] = [
     {
-        title: 'Repository',
-        url: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
-    },
-    {
-        title: 'Documentation',
-        url: 'https://laravel.com/docs/starter-kits',
+        title: 'Blog',
+        url: 'https://movimentoprocrianca.org.br/v2/',
         icon: BookOpen,
     },
 ];

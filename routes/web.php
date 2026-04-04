@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\CourseController;
+use App\Http\Controllers\EnrollmentAdminController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -21,6 +22,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/cursos', [CourseController::class, 'store'])->name('cursos.store');
     Route::put('/cursos/{course}', [CourseController::class, 'update'])->name('cursos.update');
     Route::delete('/cursos/{course}', [CourseController::class, 'destroy'])->name('cursos.destroy');
+});
+
+//ENROLLMENTS
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/inscricoes', [EnrollmentAdminController::class, 'index'])->name('inscricoes.index');
+    Route::patch('/inscricoes/{enrollment}/status', [EnrollmentAdminController::class, 'updateStatus'])->name('inscricoes.status');
 });
 
 require __DIR__.'/settings.php';
