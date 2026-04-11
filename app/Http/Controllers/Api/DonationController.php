@@ -10,17 +10,21 @@ class DonationController extends Controller
 {
     public function store(Request $request)
     {
-        $validated = $request->validate([
+         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required|string',
             'message' => 'nullable|string|max:500',
-            'status' => 'nullable|string',        
+            'status' => 'nullable|string',
             'transaction_id' => 'nullable|string',
         ]);
 
-        $validated['user_id'] = $request->user()->id;
-
-        $donation = Donation::create($validated);
+        $donation = Donation::create([
+            'amount'         => $validated['amount'],
+            'payment_method' => $validated['payment_method'],
+            'message'        => $validated['message'],
+            'user_id'        => $request->user()->id,
+            'message'        => $validated['status']
+        ]);
 
         return response()->json([
             'message' => 'Doação registrada com sucesso!',
