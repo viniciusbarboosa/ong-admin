@@ -23,7 +23,8 @@ class DonationController extends Controller
             'payment_method' => $validated['payment_method'],
             'message'        => $validated['message'],
             'user_id'        => $request->user()->id,
-            'message'        => $validated['status']
+            'message'        => $validated['status'],
+            'is_anonymous'   => false
         ]);
 
         return response()->json([
