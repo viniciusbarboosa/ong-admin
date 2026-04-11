@@ -10,8 +10,13 @@ class Enrollment extends Model
         'user_id',
         'course_id',
         'status',
+        'is_anonymous',
         'rg_front_path',
         'rg_back_path'
+    ];
+
+    protected $casts = [
+        'is_anonymous' => 'boolean',
     ];
 
     public function course() {

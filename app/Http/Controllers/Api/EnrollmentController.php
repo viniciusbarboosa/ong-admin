@@ -44,6 +44,7 @@ class EnrollmentController extends Controller
             'status'        => 'pending',
             'rg_front_path' => $rgFrontPath,
             'rg_back_path'  => $rgBackPath,
+            'is_anonymous'  => false, 
         ]);
 
         return response()->json([
