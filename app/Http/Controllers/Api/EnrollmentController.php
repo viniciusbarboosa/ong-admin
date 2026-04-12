@@ -17,13 +17,19 @@ class EnrollmentController extends Controller
             'course_id' => 'required|exists:courses,id',
             'rg_front'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'rg_back'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'full_name' => 'nullable|string|max:255',
+            'phone'     => 'nullable|string|max:15',
+            'cpf'       => 'nullable|string|max:14',
         ]);
 
         $user = $request->user();
+        $isAnonymous = is_null($user);
 
         //VERIFY EXITS INSCRITION
-        if (Enrollment::where('user_id', $user->id)->where('course_id', $request->course_id)->exists()) {
-            return response()->json(['message' => 'Inscrição já realizada para este curso.'], 400);
+        if (!$isAnonymous) {
+            if (Enrollment::where('user_id', $user->id)->where('course_id', $request->course_id)->exists()) {
+                return response()->json(['message' => 'Inscrição já realizada para este curso.'], 400);
+            }
         }
 
         $rgFrontPath = null;
@@ -39,12 +45,15 @@ class EnrollmentController extends Controller
         }
 
         $enrollment = Enrollment::create([
-            'user_id'       => $user->id,
+            'user_id'       => $user?->id,
             'course_id'     => $request->course_id,
             'status'        => 'pending',
             'rg_front_path' => $rgFrontPath,
             'rg_back_path'  => $rgBackPath,
-            'is_anonymous'  => false, 
+            'is_anonymous'  => $isAnonymous,
+            'full_name'     => $request->full_name,
+            'cpf'           => $request->cpf,
+            'phone'         => $request->phone,
         ]);
 
         return response()->json([
