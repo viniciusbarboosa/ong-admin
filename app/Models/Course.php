@@ -14,4 +14,9 @@ class Course extends Model
         'description',
         'workload',
     ];
+
+    public function shifts()
+    {
+        return $this->hasMany(CourseShift::class);
+    }
 }
