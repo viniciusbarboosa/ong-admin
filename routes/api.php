@@ -24,3 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::middleware('auth:sanctum')->post('/enroll', [EnrollmentController::class, 'enroll']);
+
+//ANONYMOUS DONATIONS
+Route::post('/donations/anonymous', [DonationController::class, 'storeAnonymous'])->name
+('donations.anonymous');

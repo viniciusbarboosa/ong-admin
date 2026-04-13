@@ -12,7 +12,10 @@ class Enrollment extends Model
         'status',
         'is_anonymous',
         'rg_front_path',
-        'rg_back_path'
+        'rg_back_path',
+        'full_name', 
+        'cpf',
+        'phone'
     ];
 
     protected $casts = [

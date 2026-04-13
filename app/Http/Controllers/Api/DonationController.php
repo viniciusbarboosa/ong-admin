@@ -39,4 +39,27 @@ class DonationController extends Controller
             Donation::where('user_id', $request->user()->id)->latest()->get()
         );
     }
+
+    public function storeAnonymous(Request $request)
+    {
+        $validated = $request->validate([
+            'amount'         => 'required|numeric|min:1',
+            'payment_method' => 'required|string',
+            'message'        => 'nullable|string|max:500',
+        ]);
+
+        $donation = Donation::create([
+            'user_id'        => null,
+            'amount'         => $validated['amount'],
+            'payment_method' => $validated['payment_method'],
+            'message'        => $validated['message'] ?? null,
+            'is_anonymous'   => true,
+            'status'         => 'pending',
+        ]);
+
+        return response()->json([
+            'message'  => 'Doação anônima registrada com sucesso!',
+            'donation' => $donation
+        ], 201);
+    }
 }
