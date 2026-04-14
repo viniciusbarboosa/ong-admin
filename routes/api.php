@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\ApiAuthController;
+use App\Http\Controllers\Api\CourseShiftController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\DonationController;
 
@@ -28,3 +29,5 @@ Route::middleware('auth:sanctum')->post('/enroll', [EnrollmentController::class,
 //ANONYMOUS DONATIONS
 Route::post('/donations/anonymous', [DonationController::class, 'storeAnonymous'])->name
 ('donations.anonymous');
+
+Route::get('courses/{course}/shifts', [CourseShiftController::class, 'index']);
