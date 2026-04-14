@@ -10,8 +10,7 @@ class EnrollmentAdminController extends Controller
 {
     public function index()
     {
-        //WITH USER APP
-        $enrollments = Enrollment::with(['user', 'course'])
+        $enrollments = Enrollment::with(['user', 'course', 'unit', 'shift'])
             ->latest()
             ->paginate(10);
 

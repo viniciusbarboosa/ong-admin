@@ -19,4 +19,9 @@ class Course extends Model
     {
         return $this->hasMany(CourseShift::class);
     }
+
+    public function units()
+    {
+        return $this->belongsToMany(Unit::class, 'course_units');
+    }
 }

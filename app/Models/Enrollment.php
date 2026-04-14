@@ -9,11 +9,13 @@ class Enrollment extends Model
     protected $fillable = [
         'user_id',
         'course_id',
+        'unit_id',
+        'course_shift_id',
         'status',
         'is_anonymous',
         'rg_front_path',
         'rg_back_path',
-        'full_name', 
+        'full_name',
         'cpf',
         'phone'
     ];
@@ -22,11 +24,23 @@ class Enrollment extends Model
         'is_anonymous' => 'boolean',
     ];
 
-    public function course() {
+    public function course()
+    {
         return $this->belongsTo(Course::class);
     }
 
-    public function user() {
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(CourseShift::class, 'course_shift_id');
+    }
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 }

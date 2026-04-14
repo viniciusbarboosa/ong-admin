@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Course;
 use App\Models\CourseShift;
+use App\Models\Unit;
 use Inertia\Inertia;
 
 class CourseController extends Controller
@@ -12,29 +13,39 @@ class CourseController extends Controller
     public function index()
     {
         return Inertia::render('courses/index', [
-            'courses' => Course::with('shifts')->paginate(10)
+            'courses' => Course::with('shifts', 'units')->paginate(10),
+            'allUnits' => Unit::where('active', true)->orderBy('name')->get(['id', 'name']),
         ]);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'workload'    => 'nullable|integer|min:1',
-            'shifts'      => 'required|array|min:1',
-            'shifts.*.shift' => 'required|in:manha,tarde,noite',
-            'shifts.*.max_students' => 'required|integer|min:1',
+            'title'                      => 'required|string|max:255',
+            'description'                => 'nullable|string',
+            'workload'                   => 'nullable|integer|min:1',
+            'shifts'                     => 'required|array|min:1',
+            'shifts.*.shift'             => 'required|in:manha,tarde,noite',
+            'shifts.*.description'       => 'nullable|string|max:255',
+            'shifts.*.start_time'        => 'nullable|string|max:10',
+            'shifts.*.end_time'          => 'nullable|string|max:10',
+            'shifts.*.max_students'      => 'required|integer|min:1',
+            'unit_ids'                   => 'nullable|array',
+            'unit_ids.*'                 => 'integer|exists:units,id',
         ]);
 
         $course = Course::create([
             'title'       => $validated['title'],
-            'description' => $validated['description'],
-            'workload'    => $validated['workload'],
+            'description' => $validated['description'] ?? null,
+            'workload'    => $validated['workload'] ?? null,
         ]);
 
         foreach ($validated['shifts'] as $shiftData) {
             $course->shifts()->create($shiftData);
+        }
+
+        if (!empty($validated['unit_ids'])) {
+            $course->units()->sync($validated['unit_ids']);
         }
 
         return redirect()->route('cursos')->with('success', 'Curso criado com sucesso.');
@@ -43,41 +54,52 @@ class CourseController extends Controller
     public function update(Request $request, Course $course)
     {
         $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'workload'    => 'nullable|integer|min:1',
-            'shifts'      => 'required|array|min:1',
-            'shifts.*.id' => 'nullable|integer|exists:course_shifts,id',
-            'shifts.*.shift' => 'required|in:manha,tarde,noite',
-            'shifts.*.max_students' => 'required|integer|min:1',
+            'title'                      => 'required|string|max:255',
+            'description'                => 'nullable|string',
+            'workload'                   => 'nullable|integer|min:1',
+            'shifts'                     => 'required|array|min:1',
+            'shifts.*.id'                => 'nullable|integer|exists:course_shifts,id',
+            'shifts.*.shift'             => 'required|in:manha,tarde,noite',
+            'shifts.*.description'       => 'nullable|string|max:255',
+            'shifts.*.start_time'        => 'nullable|string|max:10',
+            'shifts.*.end_time'          => 'nullable|string|max:10',
+            'shifts.*.max_students'      => 'required|integer|min:1',
+            'unit_ids'                   => 'nullable|array',
+            'unit_ids.*'                 => 'integer|exists:units,id',
         ]);
 
         $course->update([
             'title'       => $validated['title'],
-            'description' => $validated['description'],
-            'workload'    => $validated['workload'],
+            'description' => $validated['description'] ?? null,
+            'workload'    => $validated['workload'] ?? null,
         ]);
 
-        //IDs dos shifts enviados (existentes)
+        // Remove turnos que não estão mais presentes
         $existingIds = collect($validated['shifts'])->pluck('id')->filter()->toArray();
-        //Remove os que não estão mais presentes
         $course->shifts()->whereNotIn('id', $existingIds)->delete();
 
         foreach ($validated['shifts'] as $shiftData) {
             if (isset($shiftData['id'])) {
-                //Atualiza existente
                 CourseShift::where('id', $shiftData['id'])->update([
                     'shift'        => $shiftData['shift'],
+                    'description'  => $shiftData['description'] ?? null,
+                    'start_time'   => $shiftData['start_time'] ?? null,
+                    'end_time'     => $shiftData['end_time'] ?? null,
                     'max_students' => $shiftData['max_students'],
                 ]);
             } else {
-                //Cri novo
                 $course->shifts()->create([
                     'shift'        => $shiftData['shift'],
+                    'description'  => $shiftData['description'] ?? null,
+                    'start_time'   => $shiftData['start_time'] ?? null,
+                    'end_time'     => $shiftData['end_time'] ?? null,
                     'max_students' => $shiftData['max_students'],
                 ]);
             }
         }
+
+        // Sincroniza unidades
+        $course->units()->sync($validated['unit_ids'] ?? []);
 
         return redirect()->route('cursos')->with('success', 'Curso atualizado.');
     }
@@ -87,5 +109,4 @@ class CourseController extends Controller
         $course->delete();
         return back()->with('success', 'Curso removido.');
     }
-
 }

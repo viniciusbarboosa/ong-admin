@@ -7,6 +7,7 @@ use App\Http\Controllers\EnrollmentAdminController;
 use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DonationAdminController;
+use App\Http\Controllers\UnitController;
 
 Route::get('/', function () {
     return Inertia::render('welcome');
@@ -41,6 +42,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //DONATIONS
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/doacoes', [DonationAdminController::class, 'index'])->name('doacoes.index');
+});
+
+//UNITS
+Route::middleware(['auth'])->group(function () {
+    Route::get('/unidades', [UnitController::class, 'index'])->name('unidades.index');
+    Route::post('/unidades', [UnitController::class, 'store'])->name('unidades.store');
+    Route::put('/unidades/{unit}', [UnitController::class, 'update'])->name('unidades.update');
+    Route::delete('/unidades/{unit}', [UnitController::class, 'destroy'])->name('unidades.destroy');
 });
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

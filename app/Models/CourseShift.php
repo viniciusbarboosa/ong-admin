@@ -10,6 +10,9 @@ class CourseShift extends Model
     protected $fillable = [
         'course_id',
         'shift',
+        'description',
+        'start_time',
+        'end_time',
         'max_students',
     ];
 
