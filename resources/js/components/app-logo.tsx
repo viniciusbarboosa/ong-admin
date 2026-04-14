@@ -4,7 +4,7 @@ export default function AppLogo() {
             <img
                 src="/ong/logoprocrianca.png"
                 alt="Logo"
-                className="h-14 w-auto object-contain"
+                className="h-18 w-auto object-contain"
             />
         </div>
     );
