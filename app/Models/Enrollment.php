@@ -44,9 +44,5 @@ class Enrollment extends Model
     {
         return $this->belongsTo(User::class);
     }
-
-    public function shift()
-    {
-        return $this->belongsTo(CourseShift::class, 'course_shift_id');
-    }
+    
 }

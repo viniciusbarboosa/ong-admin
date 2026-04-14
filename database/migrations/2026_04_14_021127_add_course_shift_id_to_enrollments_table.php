@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('enrollments', function (Blueprint $table) {
-            $table->foreignId('course_shift_id')
-                ->nullable()
-                ->after('course_id')
-                ->constrained('course_shifts')
-                ->nullOnDelete();
-        });
+        if (!Schema::hasColumn('enrollments', 'course_shift_id')) {
+            Schema::table('enrollments', function (Blueprint $table) {
+                $table->foreignId('course_shift_id')
+                    ->nullable()
+                    ->after('course_id')
+                    ->constrained('course_shifts')
+                    ->nullOnDelete();
+            });
+        }
     }
 
     /**
@@ -26,10 +28,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('enrollments', function (Blueprint $table) {
-            Schema::table('enrollments', function (Blueprint $table) {
+            if (Schema::hasColumn('enrollments', 'course_shift_id')) {
                 $table->dropForeign(['course_shift_id']);
                 $table->dropColumn('course_shift_id');
-            });
+            }
         });
     }
 };
