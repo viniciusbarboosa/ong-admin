@@ -14,16 +14,15 @@ class EnrollmentController extends Controller
 {
     public function enroll(Request $request)
     {
-        $request->validate([
-            'course_id'       => 'required|exists:courses,id',
-            'unit_id'         => 'required|exists:units,id',
-            'course_shift_id' => 'required|exists:course_shifts,id',
-            'rg_front'        => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'rg_back'         => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'full_name'       => 'required|string|max:255',
-            'phone'           => 'nullable|string|max:15',
-            'cpf'             => 'required|string|max:14',
-            'password'        => 'nullable|string|min:6',
+        //image max 2048
+        $validated = $request->validate([
+            'course_id' => 'required|exists:courses,id',
+            'course_shift_id'  => 'required|exists:course_shifts,id',
+            'rg_front'  => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'rg_back'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'full_name' => 'nullable|string|max:255',
+            'phone'     => 'nullable|string|max:15',
+            'cpf'       => 'nullable|string|max:14',
         ]);
 
         // Valida se a unidade oferece este curso
@@ -33,63 +32,30 @@ class EnrollmentController extends Controller
             return response()->json(['message' => 'Esta unidade não oferece este curso.'], 422);
         }
 
-        // Valida se o turno pertence ao curso
-        $shiftBelongsToCourse = CourseShift::where('id', $request->course_shift_id)
-            ->where('course_id', $request->course_id)
-            ->exists();
-        if (!$shiftBelongsToCourse) {
-            return response()->json(['message' => 'Turno inválido para este curso.'], 422);
+        $shift = CourseShift::where('id', $validated['course_shift_id'])
+                    ->where('course_id', $validated['course_id'])
+                    ->first();
+
+        if (!$shift) {
+            return response()->json(['message' => 'Turno inválido para este curso.'], 400);
         }
 
-        // ── Resolução de conta ────────────────────────────────────────────────────
-        $user       = $request->user(); // null se não autenticado
-        $token      = null;
-        $isAnonymous = true;
+         //Check vacancies
+        $acceptedCount = Enrollment::where('course_shift_id', $shift->id)
+                            ->where('status', 'accepted')
+                            ->count();
 
-        if (is_null($user) && $request->filled('password')) {
-            $cpfLimpo = preg_replace('/\D/', '', $request->cpf);
-
-            $userExistente = User::where('cpf', $request->cpf)
-                ->orWhere('cpf', $cpfLimpo)
-                ->first();
-
-            if ($userExistente) {
-                // CPF já tem conta — valida a senha
-                if (!Hash::check($request->password, $userExistente->password)) {
-                    return response()->json([
-                        'message' => 'CPF já possui uma conta. A senha informada está incorreta.',
-                        'field'   => 'password',
-                    ], 422);
-                }
-                $user = $userExistente;
-            } else {
-                // Cria conta nova usando CPF como identificador
-                // Gera um e-mail interno único baseado no CPF (não precisa ser real)
-                $emailInterno = 'cpf.' . $cpfLimpo . '@app.procrianca.internal';
-
-                $user = User::create([
-                    'name'      => $request->full_name,
-                    'email'     => $emailInterno,
-                    'cpf'       => $request->cpf,
-                    'password'  => Hash::make($request->password),
-                    'type_user' => 'U',
-                    'active'    => true,
-                ]);
-            }
-
-            $isAnonymous = false;
-            // Revoga tokens anteriores do app e emite um novo
-            $user->tokens()->where('name', 'app-mobile')->delete();
-            $token = $user->createToken('app-mobile')->plainTextToken;
+        if ($acceptedCount >= $shift->max_students) {
+            return response()->json(['message' => 'Este turno já está lotado.'], 400);
         }
 
-        // Verifica inscrição duplicada para usuários autenticados/criados
-        if (!$isAnonymous && $user) {
-            if (Enrollment::where('user_id', $user->id)
-                ->where('course_id', $request->course_id)
-                ->exists()
-            ) {
-                return response()->json(['message' => 'Você já tem uma inscrição neste curso.'], 400);
+        //VERIFY EXITS INSCRITION
+        if (!$isAnonymous) {
+            $exists = Enrollment::where('user_id', $user->id)
+                        ->where('course_id', $validated['course_id'])
+                        ->exists();
+            if ($exists) {
+                return response()->json(['message' => 'Você já está inscrito neste curso.'], 400);
             }
         }
 
@@ -104,17 +70,16 @@ class EnrollmentController extends Controller
         }
 
         $enrollment = Enrollment::create([
-            'user_id'         => $user?->id,
-            'course_id'       => $request->course_id,
-            'unit_id'         => $request->unit_id,
-            'course_shift_id' => $request->course_shift_id,
-            'status'          => 'pending',
-            'rg_front_path'   => $rgFrontPath,
-            'rg_back_path'    => $rgBackPath,
-            'is_anonymous'    => $isAnonymous,
-            'full_name'       => $request->full_name,
-            'cpf'             => $request->cpf,
-            'phone'           => $request->phone,
+            'user_id'       => $user?->id,
+            'course_id'     => $request->course_id,
+            'course_shift_id' => $validated['course_shift_id'],
+            'status'        => 'pending',
+            'rg_front_path' => $rgFrontPath,
+            'rg_back_path'  => $rgBackPath,
+            'is_anonymous'  => $isAnonymous,
+            'full_name'     => $request->full_name ?? null,
+            'cpf'           => $request->cpf ?? null,
+            'phone'         => $request->phone ?? null,
         ]);
 
         $enrollment->load(['course', 'unit', 'shift']);

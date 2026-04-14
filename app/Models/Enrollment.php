@@ -14,6 +14,7 @@ class Enrollment extends Model
         'status',
         'is_anonymous',
         'rg_front_path',
+        'course_shift_id',
         'rg_back_path',
         'full_name',
         'cpf',
@@ -42,5 +43,10 @@ class Enrollment extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(CourseShift::class, 'course_shift_id');
     }
 }
