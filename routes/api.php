@@ -26,8 +26,19 @@ Route::middleware('auth:sanctum')->group(function () {
 // Inscrição — aceita autenticado OU anônimo (o controller detecta via $request->user())
 Route::post('/enroll', [EnrollmentController::class, 'enroll']);
 
+// Inscrições do usuário autenticado
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/enrollments', [EnrollmentController::class, 'index']);
+    Route::delete('/enrollments/{enrollment}', [EnrollmentController::class, 'cancel']);
+});
+
 //ANONYMOUS DONATIONS
 Route::post('/donations/anonymous', [DonationController::class, 'storeAnonymous'])->name
 ('donations.anonymous');
 
 Route::get('courses/{course}/shifts', [CourseShiftController::class, 'index']);
+
+// Rotas usadas pelo app mobile
+Route::get('/courses', [CourseApiController::class, 'index']);
+Route::get('/courses/{course}/units', [CourseApiController::class, 'units']);
+Route::get('/courses/{course}/units/{unit}/shifts', [CourseApiController::class, 'shifts']);

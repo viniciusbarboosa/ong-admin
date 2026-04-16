@@ -13,7 +13,12 @@ class CourseShift extends Model
         'description',
         'start_time',
         'end_time',
+        'days_of_week',
         'max_students',
+    ];
+
+    protected $casts = [
+        'days_of_week' => 'array',
     ];
 
     public function course(): BelongsTo

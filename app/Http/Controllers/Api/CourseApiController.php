@@ -28,6 +28,7 @@ class CourseApiController extends Controller
                     'description'  => $s->description,
                     'start_time'   => $s->start_time,
                     'end_time'     => $s->end_time,
+                    'days_of_week' => $s->days_of_week ?? [],
                     'max_students' => $s->max_students,
                 ]),
             ]);
@@ -81,6 +82,7 @@ class CourseApiController extends Controller
                 'description'  => $s->description,
                 'start_time'   => $s->start_time,
                 'end_time'     => $s->end_time,
+                'days_of_week' => $s->days_of_week ?? [],
                 'max_students' => $s->max_students,
             ]);
 

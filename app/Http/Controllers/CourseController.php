@@ -29,6 +29,8 @@ class CourseController extends Controller
             'shifts.*.description'       => 'nullable|string|max:255',
             'shifts.*.start_time'        => 'nullable|string|max:10',
             'shifts.*.end_time'          => 'nullable|string|max:10',
+            'shifts.*.days_of_week'      => 'nullable|array',
+            'shifts.*.days_of_week.*'    => 'string|in:seg,ter,qua,qui,sex,sab,dom',
             'shifts.*.max_students'      => 'required|integer|min:1',
             'unit_ids'                   => 'nullable|array',
             'unit_ids.*'                 => 'integer|exists:units,id',
@@ -63,6 +65,8 @@ class CourseController extends Controller
             'shifts.*.description'       => 'nullable|string|max:255',
             'shifts.*.start_time'        => 'nullable|string|max:10',
             'shifts.*.end_time'          => 'nullable|string|max:10',
+            'shifts.*.days_of_week'      => 'nullable|array',
+            'shifts.*.days_of_week.*'    => 'string|in:seg,ter,qua,qui,sex,sab,dom',
             'shifts.*.max_students'      => 'required|integer|min:1',
             'unit_ids'                   => 'nullable|array',
             'unit_ids.*'                 => 'integer|exists:units,id',
@@ -85,6 +89,7 @@ class CourseController extends Controller
                     'description'  => $shiftData['description'] ?? null,
                     'start_time'   => $shiftData['start_time'] ?? null,
                     'end_time'     => $shiftData['end_time'] ?? null,
+                    'days_of_week' => $shiftData['days_of_week'] ?? null,
                     'max_students' => $shiftData['max_students'],
                 ]);
             } else {
@@ -93,6 +98,7 @@ class CourseController extends Controller
                     'description'  => $shiftData['description'] ?? null,
                     'start_time'   => $shiftData['start_time'] ?? null,
                     'end_time'     => $shiftData['end_time'] ?? null,
+                    'days_of_week' => $shiftData['days_of_week'] ?? null,
                     'max_students' => $shiftData['max_students'],
                 ]);
             }

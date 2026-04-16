@@ -10,6 +10,7 @@ interface CourseShift {
     description: string;
     start_time: string;
     end_time: string;
+    days_of_week: string[];
     max_students: number;
 }
 
@@ -45,6 +46,16 @@ interface CourseForm {
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Cursos', href: '/cursos' },
+];
+
+const ALL_DAYS = [
+    { key: 'seg', label: 'Seg' },
+    { key: 'ter', label: 'Ter' },
+    { key: 'qua', label: 'Qua' },
+    { key: 'qui', label: 'Qui' },
+    { key: 'sex', label: 'Sex' },
+    { key: 'sab', label: 'Sáb' },
+    { key: 'dom', label: 'Dom' },
 ];
 
 const shiftLabels: Record<CourseShift['shift'], string> = {
@@ -90,6 +101,7 @@ export default function CourseIndex({
                     description: s.description || '',
                     start_time: s.start_time || '',
                     end_time: s.end_time || '',
+                    days_of_week: s.days_of_week ?? [],
                 })),
                 unit_ids: course.units.map((u) => u.id),
             });
@@ -131,6 +143,7 @@ export default function CourseIndex({
                 description: '',
                 start_time: shiftDefaults.manha.start_time,
                 end_time: shiftDefaults.manha.end_time,
+                days_of_week: [],
                 max_students: 10,
             },
         ]);
@@ -151,6 +164,15 @@ export default function CourseIndex({
 
         newShifts[index] = updated;
         setData('shifts', newShifts);
+    };
+
+    const toggleDay = (shiftIndex: number, day: string) => {
+        const shift = data.shifts[shiftIndex];
+        const current = shift.days_of_week ?? [];
+        const next = current.includes(day)
+            ? current.filter((d) => d !== day)
+            : [...current, day];
+        updateShift(shiftIndex, 'days_of_week', next);
     };
 
     const removeShift = (index: number) => {
@@ -483,21 +505,46 @@ export default function CourseIndex({
                                                     <X size={18} />
                                                 </button>
                                             </div>
-                                            {/* Descrição adicional */}
-                                            <div>
-                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
-                                                    Informações adicionais (exibidas no app)
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    value={shift.description}
-                                                    onChange={(e) =>
-                                                        updateShift(index, 'description', e.target.value)
-                                                    }
-                                                    placeholder="Ex: Aulas práticas e teóricas. Leve caderno e caneta."
-                                                    className="w-full rounded-md border border-sidebar-border bg-transparent p-2 text-sm"
-                                                />
-                                            </div>
+                                                            {/* Descrição adicional */}
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
+                                                                    Informações adicionais (exibidas no app)
+                                                                </label>
+                                                                <input
+                                                                    type="text"
+                                                                    value={shift.description}
+                                                                    onChange={(e) =>
+                                                                        updateShift(index, 'description', e.target.value)
+                                                                    }
+                                                                    placeholder="Ex: Aulas práticas e teóricas. Leve caderno e caneta."
+                                                                    className="w-full rounded-md border border-sidebar-border bg-transparent p-2 text-sm"
+                                                                />
+                                                            </div>
+                                                            {/* Dias da semana */}
+                                                            <div>
+                                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
+                                                                    Dias da semana
+                                                                </label>
+                                                                <div className="flex flex-wrap gap-1">
+                                                                    {ALL_DAYS.map((d) => {
+                                                                        const selected = (shift.days_of_week ?? []).includes(d.key);
+                                                                        return (
+                                                                            <button
+                                                                                key={d.key}
+                                                                                type="button"
+                                                                                onClick={() => toggleDay(index, d.key)}
+                                                                                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
+                                                                                    selected
+                                                                                        ? 'border-[#3043B8] bg-[#3043B8] text-white'
+                                                                                        : 'border-sidebar-border text-neutral-600 hover:border-[#3043B8] hover:text-[#3043B8]'
+                                                                                }`}
+                                                                            >
+                                                                                {d.label}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                                </div>
+                                                            </div>
                                         </div>
                                     ))}
                                 </div>
