@@ -82,6 +82,23 @@ class EnrollmentController extends Controller
         // Se anônimo e enviou CPF, cria/recupera uma conta mínima para vincular a inscrição
         if ($isAnonymous && $request->filled('cpf')) {
             $cpf  = preg_replace('/\D/', '', $request->cpf);
+
+            $existingUser = User::where('cpf', $cpf)->first();
+
+            // Se já existe uma conta real (com senha definida pelo usuário), exige login
+            if ($existingUser) {
+                // Verifica se a senha é a senha padrão (CPF) — conta criada automaticamente pelo app
+                $isAutoAccount = Hash::check($cpf, $existingUser->password);
+
+                if (!$isAutoAccount) {
+                    // Conta com senha personalizada: o usuário deve fazer login para continuar
+                    return response()->json([
+                        'message' => 'Este CPF já possui uma conta. Faça login para continuar.',
+                        'code'    => 'account_exists',
+                    ], 409);
+                }
+            }
+
             $user = User::firstOrCreate(
                 ['cpf' => $cpf],
                 [
