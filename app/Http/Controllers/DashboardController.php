@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
@@ -28,7 +29,7 @@ class DashboardController extends Controller
             ->get()
             ->map(fn($d) => [
                 'id'         => $d->id,
-                'amount'     => (float) $d->amount, 
+                'amount'     => (float) $d->amount,
                 'user_name'  => $d->is_anonymous ? 'Anônimo' : optional($d->user)->name ?? 'Usuário',
                 'created_at' => $d->created_at->format('d/m/Y H:i'),
             ]);
@@ -70,6 +71,66 @@ class DashboardController extends Controller
                 'labels' => $chartLabels,
                 'data'   => $chartData,
             ],
+        ]);
+    }
+
+    public function analysisAI()
+    {
+        //PEGAR ULTIMOS 6 MESES, CRIAR UMA FUNCTION PRIVATE DEPOIS pq ta repetido em cima
+        $sixMonthsAgo = now()->subMonths(5)->startOfMonth();
+
+        $donations = Donation::select(
+            DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
+            DB::raw('SUM(amount) as total')
+        )
+            ->where('created_at', '>=', $sixMonthsAgo)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        $dados = $donations->map(fn($d) => [
+            'mes' => $d->month,
+            'total' => (float) $d->total
+        ]);
+
+        $prompt = "
+            Você é um analista de dados de uma ONG.
+
+        Analise os dados abaixo e responda em português de forma organizada:
+
+        1. Tendência das doações
+        2. Melhor mês
+        3. Pior mês
+        4. Sugestão estratégica
+
+        Dados:
+        " . json_encode($dados);
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('GROQ_API_KEY'),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.groq.com/openai/v1/chat/completions', [
+            'model' => 'llama-3.1-8b-instant',
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => $prompt
+                ]
+            ]
+        ]);
+
+        $json = $response->json();
+
+        if (!$response->successful() || isset($json['error'])) {
+            return response()->json([
+                'analise' => 'Erro IA: ' . ($json['error']['message'] ?? 'Falha na requisição')
+            ]);
+        }
+
+        $texto = $json['choices'][0]['message']['content'] ?? 'Erro ao gerar análise';
+
+        return response()->json([
+            'analise' => $texto
         ]);
     }
 }

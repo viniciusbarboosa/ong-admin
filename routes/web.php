@@ -18,6 +18,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 });
 
+Route::middleware(['auth'])->group(function () {
+    Route::post('dashboard/analise-ia', [DashboardController::class, 'analysisAI'])->name('dashboard');
+});
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/cursos', [CourseController::class, 'index'])->name('cursos');

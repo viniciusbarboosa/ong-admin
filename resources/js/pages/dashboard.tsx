@@ -1,3 +1,6 @@
+import { useState } from "react";
+import axios from "axios";
+import { Brain, Sparkles } from "lucide-react";
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
@@ -51,6 +54,24 @@ export default function Dashboard({ stats, recentDonations, chart }: Props) {
         month: label,
         total: chart.data[index],
     }));
+    const [analise, setAnalise] = useState<string | null>(null);
+    const [loadingIA, setLoadingIA] = useState(false);
+
+    const gerarAnaliseIA = async () => {
+        setLoadingIA(true);
+        setAnalise(null);
+
+        try {
+            const res = await axios.post('/dashboard/analise-ia');
+            setAnalise(res.data.analise);
+        } catch (e) {
+
+
+            setAnalise("Erro ao gerar análise com IA.");
+        }
+
+        setLoadingIA(false);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -100,7 +121,7 @@ export default function Dashboard({ stats, recentDonations, chart }: Props) {
                                     <YAxis />
                                     <Tooltip
                                         formatter={(value: any) => {
-                                        const num = Number(value);
+                                            const num = Number(value);
                                             return isNaN(num) ? 'R$ 0.00' : `R$ ${num.toFixed(2)}`;
                                         }}
                                     />
@@ -148,6 +169,46 @@ export default function Dashboard({ stats, recentDonations, chart }: Props) {
                             )}
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div className="lg:col-span-2 border rounded-xl bg-white p-4 shadow-sm dark:bg-gray-900">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        <Brain className="h-5 w-5 text-indigo-500" />
+                        <h3 className="font-semibold text-gray-700 dark:text-gray-200">
+                            Análise Inteligente (IA)
+                        </h3>
+                    </div>
+
+                    <button
+                        onClick={gerarAnaliseIA}
+                        disabled={loadingIA}
+                        className="flex items-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm text-white hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                        <Sparkles className="h-4 w-4" />
+                        {loadingIA ? "Analisando..." : "Gerar análise"}
+                    </button>
+                </div>
+
+                <div className="min-h-[120px] text-sm text-gray-600 dark:text-gray-300 whitespace-pre-line">
+                    {loadingIA && (
+                        <p className="animate-pulse text-gray-400">
+                            IA analisando os dados...
+                        </p>
+                    )}
+
+                    {!loadingIA && analise && (
+                        <div className="rounded-lg bg-gray-50 p-3 dark:bg-gray-800">
+                            {analise}
+                        </div>
+                    )}
+
+                    {!loadingIA && !analise && (
+                        <p className="text-gray-400">
+                            Clique em "Gerar análise" para obter insights das doações.
+                        </p>
+                    )}
                 </div>
             </div>
         </AppLayout>
