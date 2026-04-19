@@ -2,7 +2,7 @@ import { useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm, router, Link } from '@inertiajs/react';
-import { Plus, Pencil, Trash2, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Search } from 'lucide-react';
 
 interface CourseShift {
     id?: number;
@@ -73,12 +73,15 @@ const shiftDefaults: Record<CourseShift['shift'], { start_time: string; end_time
 export default function CourseIndex({
     courses,
     allUnits,
+    search: initialSearch = '',
 }: {
     courses: PaginatedData<Course>;
     allUnits: Unit[];
+    search?: string;
 }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+    const [searchTerm, setSearchTerm] = useState(initialSearch);
 
     const { data, setData, post, put, processing, errors, reset, clearErrors } =
         useForm<CourseForm>({
@@ -188,6 +191,20 @@ export default function CourseIndex({
         );
     };
 
+    const handleSearch = (e?: React.FormEvent) => {
+        e?.preventDefault();
+        router.get(
+            route('cursos'),
+            { search: searchTerm || undefined },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    };
+
+    const handleClearSearch = () => {
+        setSearchTerm('');
+        router.get(route('cursos'), {}, { preserveState: true, preserveScroll: true });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Cursos" />
@@ -197,14 +214,45 @@ export default function CourseIndex({
                     <h1 className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
                         Gerenciar Cursos
                     </h1>
-                    <button
-                        onClick={() => openModal()}
-                        style={{ backgroundColor: '#3043B8' }}
-                        className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
-                    >
-                        <Plus size={18} />
-                        Novo Curso
-                    </button>
+
+                    <div className="flex items-center gap-3">
+                        <form onSubmit={handleSearch} className="flex items-stretch">
+                            <div className="relative flex-1">
+                                <input
+                                    type="text"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    placeholder="Buscar cursos..."
+                                    className="h-10 w-64 rounded-l-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm focus:border-[#3043B8] focus:ring-1 focus:ring-[#3043B8] outline-none"
+                                />
+                                {searchTerm && (
+                                    <button
+                                        type="button"
+                                        onClick={handleClearSearch}
+                                        className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-600"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                )}
+                            </div>
+                            <button
+                                type="submit"
+                                className="flex h-10 w-10 items-center justify-center rounded-r-lg bg-[#3043B8] text-white hover:bg-[#2538a0] transition-colors"
+                                aria-label="Buscar"
+                            >
+                                <Search size={18} />
+                            </button>
+                        </form>
+
+                        <button
+                            onClick={() => openModal()}
+                            className="flex h-10 items-center gap-2 rounded-lg bg-[#3043B8] px-4 text-sm font-medium text-white hover:bg-[#2538a0] transition-colors"
+                        >
+                            <Plus size={18} />
+                            Novo Curso
+                        </button>
+                    </div>
+
                 </div>
 
                 <div className="border-sidebar-border/70 dark:border-sidebar-border overflow-hidden rounded-xl border bg-white dark:bg-neutral-900">
@@ -306,11 +354,10 @@ export default function CourseIndex({
                                     key={index}
                                     href={link.url || ''}
                                     dangerouslySetInnerHTML={{ __html: link.label }}
-                                    className={`rounded px-3 py-1 text-sm ${
-                                        link.active
-                                            ? 'bg-[#3043B8] text-white'
-                                            : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400'
-                                    } ${!link.url ? 'pointer-events-none opacity-50' : ''}`}
+                                    className={`rounded px-3 py-1 text-sm ${link.active
+                                        ? 'bg-[#3043B8] text-white'
+                                        : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400'
+                                        } ${!link.url ? 'pointer-events-none opacity-50' : ''}`}
                                 />
                             ))}
                         </div>
@@ -395,11 +442,10 @@ export default function CourseIndex({
                                                     key={unit.id}
                                                     type="button"
                                                     onClick={() => toggleUnit(unit.id)}
-                                                    className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${
-                                                        selected
-                                                            ? 'border-[#3043B8] bg-[#3043B8] text-white'
-                                                            : 'border-sidebar-border text-neutral-600 hover:border-[#3043B8] hover:text-[#3043B8]'
-                                                    }`}
+                                                    className={`rounded-full border px-3 py-1 text-sm font-medium transition-colors ${selected
+                                                        ? 'border-[#3043B8] bg-[#3043B8] text-white'
+                                                        : 'border-sidebar-border text-neutral-600 hover:border-[#3043B8] hover:text-[#3043B8]'
+                                                        }`}
                                                 >
                                                     {unit.name}
                                                 </button>
@@ -505,46 +551,45 @@ export default function CourseIndex({
                                                     <X size={18} />
                                                 </button>
                                             </div>
-                                                            {/* Descrição adicional */}
-                                                            <div>
-                                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
-                                                                    Informações adicionais (exibidas no app)
-                                                                </label>
-                                                                <input
-                                                                    type="text"
-                                                                    value={shift.description}
-                                                                    onChange={(e) =>
-                                                                        updateShift(index, 'description', e.target.value)
-                                                                    }
-                                                                    placeholder="Ex: Aulas práticas e teóricas. Leve caderno e caneta."
-                                                                    className="w-full rounded-md border border-sidebar-border bg-transparent p-2 text-sm"
-                                                                />
-                                                            </div>
-                                                            {/* Dias da semana */}
-                                                            <div>
-                                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
-                                                                    Dias da semana
-                                                                </label>
-                                                                <div className="flex flex-wrap gap-1">
-                                                                    {ALL_DAYS.map((d) => {
-                                                                        const selected = (shift.days_of_week ?? []).includes(d.key);
-                                                                        return (
-                                                                            <button
-                                                                                key={d.key}
-                                                                                type="button"
-                                                                                onClick={() => toggleDay(index, d.key)}
-                                                                                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${
-                                                                                    selected
-                                                                                        ? 'border-[#3043B8] bg-[#3043B8] text-white'
-                                                                                        : 'border-sidebar-border text-neutral-600 hover:border-[#3043B8] hover:text-[#3043B8]'
-                                                                                }`}
-                                                                            >
-                                                                                {d.label}
-                                                                            </button>
-                                                                        );
-                                                                    })}
-                                                                </div>
-                                                            </div>
+                                            {/* Descrição adicional */}
+                                            <div>
+                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
+                                                    Informações adicionais (exibidas no app)
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    value={shift.description}
+                                                    onChange={(e) =>
+                                                        updateShift(index, 'description', e.target.value)
+                                                    }
+                                                    placeholder="Ex: Aulas práticas e teóricas. Leve caderno e caneta."
+                                                    className="w-full rounded-md border border-sidebar-border bg-transparent p-2 text-sm"
+                                                />
+                                            </div>
+                                            {/* Dias da semana */}
+                                            <div>
+                                                <label className="block text-xs font-medium text-neutral-500 mb-1">
+                                                    Dias da semana
+                                                </label>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {ALL_DAYS.map((d) => {
+                                                        const selected = (shift.days_of_week ?? []).includes(d.key);
+                                                        return (
+                                                            <button
+                                                                key={d.key}
+                                                                type="button"
+                                                                onClick={() => toggleDay(index, d.key)}
+                                                                className={`rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors ${selected
+                                                                    ? 'border-[#3043B8] bg-[#3043B8] text-white'
+                                                                    : 'border-sidebar-border text-neutral-600 hover:border-[#3043B8] hover:text-[#3043B8]'
+                                                                    }`}
+                                                            >
+                                                                {d.label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

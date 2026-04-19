@@ -10,11 +10,22 @@ use Inertia\Inertia;
 
 class CourseController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $search = $request->input('search');
+
+        $courses = Course::with(['shifts', 'units'])
+            ->when($search, function ($query, $search) {
+                $query->where('title', 'like', "%{$search}%")
+                    ->orWhere('description', 'like', "%{$search}%");
+            })
+            ->paginate(10)
+            ->withQueryString();
+
         return Inertia::render('courses/index', [
-            'courses' => Course::with('shifts', 'units')->paginate(10),
+            'courses'  => $courses,
             'allUnits' => Unit::where('active', true)->orderBy('name')->get(['id', 'name']),
+            'search'   => $search,
         ]);
     }
 
