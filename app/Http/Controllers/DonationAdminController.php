@@ -9,14 +9,23 @@ use Inertia\Inertia;
 
 class DonationAdminController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        $status = $request->input('status');
+
         $donations = Donation::with('user')
+            ->when($status, function ($query, $status) {
+                $query->where('status', $status);
+            })
             ->latest()
-            ->paginate(15);
+            ->paginate(15)
+            ->withQueryString();
 
         return Inertia::render('donations/index', [
-            'donations' => $donations
+            'donations' => $donations,
+            'filters' => [
+                'status' => $status,
+            ],
         ]);
     }
 }

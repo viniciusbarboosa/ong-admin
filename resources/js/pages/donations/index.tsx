@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { Heart, DollarSign, Calendar, MessageCircle } from 'lucide-react';
+import { useState } from 'react';
 
 interface Donation {
     id: number;
@@ -12,7 +13,33 @@ interface Donation {
     user: { name: string; email: string };
 }
 
-export default function DonationIndex({ donations }: { donations: { data: Donation[] } }) {
+interface Props {
+    donations: {
+        data: Donation[];
+        links: any[];
+        from: number;
+        to: number;
+        total: number;
+    };
+    filters?: {
+        status?: string;
+    };
+}
+
+export default function DonationIndex({ donations, filters }: Props) {
+    const [statusFilter, setStatusFilter] = useState(filters?.status || '');
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newStatus = e.target.value;
+        setStatusFilter(newStatus);
+
+        router.get(
+            '/doacoes',
+            { status: newStatus || undefined },
+            { preserveState: true, preserveScroll: true, replace: true }
+        );
+    };
+
     return (
         <AppLayout breadcrumbs={[{ title: 'Doações', href: '/doacoes' }]}>
             <Head title="Histórico de Doações" />
@@ -24,6 +51,18 @@ export default function DonationIndex({ donations }: { donations: { data: Donati
                              Histórico de Doações
                         </h1>
                         <p className="text-sm text-neutral-500">Acompanhe todas as contribuições recebidas do App</p>
+                    </div>
+
+                    <div>
+                        <select
+                            value={statusFilter}
+                            onChange={handleStatusChange}
+                            className="rounded-lg border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 py-2 px-3 text-sm focus:border-[#3043B8] focus:ring-1 focus:ring-[#3043B8] outline-none"
+                        >
+                            <option value="">Todos os status</option>
+                            <option value="pending">Pendente</option>
+                            <option value="completed">Concluída</option>
+                        </select>
                     </div>
                 </div>
 
