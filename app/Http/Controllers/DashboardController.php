@@ -93,6 +93,12 @@ class DashboardController extends Controller
             'total' => (float) $d->total
         ]);
 
+        if ($dados->isEmpty() || $dados->sum('total') == 0) {
+            return response()->json([
+                'analise' => 'Não há dados suficientes para análise'
+            ]);
+        }
+
         $prompt = "
             Você é um analista de dados de uma ONG.
 
