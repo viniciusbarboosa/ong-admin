@@ -48,7 +48,7 @@ export default function DonationIndex({ donations, filters }: Props) {
                 <div className="flex items-center justify-between">
                     <div>
                         <h1 className="text-2xl font-semibold flex items-center gap-2">
-                             Histórico de Doações
+                            Histórico de Doações
                         </h1>
                         <p className="text-sm text-neutral-500">Acompanhe todas as contribuições recebidas do App</p>
                     </div>
@@ -98,9 +98,8 @@ export default function DonationIndex({ donations, filters }: Props) {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 text-center">
-                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                            donation.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                                        }`}>
+                                        <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${donation.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                            }`}>
                                             {donation.status === 'completed' ? 'Concluída' : 'Pendente'}
                                         </span>
                                     </td>
@@ -110,6 +109,35 @@ export default function DonationIndex({ donations, filters }: Props) {
                     </table>
                     {donations.data.length === 0 && (
                         <div className="p-10 text-center text-neutral-500">Nenhuma doação registrada ainda.</div>
+                    )}
+
+                    {donations.links && donations.links.length > 3 && (
+                        <div className="flex items-center justify-between border-t border-sidebar-border/70 px-6 py-4">
+                            <div className="text-sm text-neutral-500">
+                                Mostrando {donations.from} até {donations.to} de {donations.total} resultados
+                            </div>
+                            <div className="flex gap-2">
+                                {donations.links.map((link, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => {
+                                            if (link.url) {
+                                                router.get(link.url,
+                                                    { status: statusFilter || undefined },
+                                                    { preserveState: true, preserveScroll: true }
+                                                );
+                                            }
+                                        }}
+                                        disabled={!link.url}
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        className={`rounded px-3 py-1 text-sm ${link.active
+                                                ? 'bg-[#3043B8] text-white'
+                                                : 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-400'
+                                            } ${!link.url ? 'pointer-events-none opacity-50' : ''}`}
+                                    />
+                                ))}
+                            </div>
+                        </div>
                     )}
                 </div>
             </div>
