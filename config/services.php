@@ -35,4 +35,8 @@ return [
         ],
     ],
 
+    'pagarme' => [
+        'token' => env('TOKEN_PAGARME'),
+    ],
+
 ];
