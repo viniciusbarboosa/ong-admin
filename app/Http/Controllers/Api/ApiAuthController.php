@@ -65,7 +65,21 @@ class ApiAuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request)
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $request->validate([
+            'name'  => 'sometimes|string|max:255',
+            'phone' => 'sometimes|nullable|string|max:20',
+            'cpf'   => 'sometimes|string|size:11|unique:users,cpf,' . $user->id,
+        ]);
+
+        $user->fill($request->only(['name', 'phone', 'cpf']));
+        $user->save();
+
+        return response()->json(['message' => 'Perfil atualizado com sucesso.', 'user' => $user]);
+    }
     {
         $request->user()->currentAccessToken()->delete();
 
