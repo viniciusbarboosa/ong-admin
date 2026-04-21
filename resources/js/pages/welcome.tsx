@@ -24,16 +24,16 @@ export default function Welcome() {
                             <>
                                 <Link
                                     href={route('login')}
-                                    className="text-white hover:underline"
+                                    className="rounded-md bg-white/20 px-4 py-1.5 text-white hover:bg-white/30"
                                 >
                                     Entrar
                                 </Link>
-                                <Link
+                        {/*        <Link
                                     href={route('register')}
                                     className="rounded-md bg-white/20 px-4 py-1.5 text-white hover:bg-white/30"
                                 >
                                     Cadastrar
-                                </Link>
+                                </Link>*/}
                             </>
                         )}
                     </nav>
