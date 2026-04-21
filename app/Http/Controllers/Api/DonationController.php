@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Donation;
 use App\Services\PagarmeService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class DonationController extends Controller
@@ -16,6 +17,8 @@ class DonationController extends Controller
 
     public function store(Request $request)
     {
+        Log::debug('[Donation:store] INPUT', $request->all());
+
         $validated = $request->validate([
             'amount'         => 'required|numeric|min:1',
             'payment_method' => 'required|in:pix,boleto,credit_card',
@@ -28,6 +31,11 @@ class DonationController extends Controller
         ]);
 
         $user = $request->user();
+
+        if (empty($user->cpf)) {
+            return response()->json(['message' => 'Seu cadastro não possui CPF. Atualize seu perfil antes de doar.'], 422);
+        }
+
         $doador = [
             'nome'     => $user->name,
             'email'    => $user->email,
@@ -42,6 +50,8 @@ class DonationController extends Controller
 
     public function storeAnonymous(Request $request)
     {
+        Log::debug('[Donation:storeAnonymous] INPUT', $request->all());
+
         $validated = $request->validate([
             'amount'         => 'required|numeric|min:1',
             'payment_method' => 'required|in:pix,boleto,credit_card',
@@ -95,6 +105,7 @@ class DonationController extends Controller
                 ]),
             };
         } catch (Exception $e) {
+            Log::error('[Donation] ERRO PAGARME', ['message' => $e->getMessage()]);
             return response()->json(['message' => $e->getMessage()], 422);
         }
 

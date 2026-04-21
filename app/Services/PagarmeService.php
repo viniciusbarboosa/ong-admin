@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Exception;
 
 class PagarmeService
@@ -155,38 +156,54 @@ class PagarmeService
 
     private function montarCliente(array $doador): array
     {
-        return [
-            'name'  => $doador['nome'],
-            'email' => $doador['email'],
-            'type'  => 'individual',
+        $cliente = [
+            'name'          => $doador['nome'],
+            'email'         => $doador['email'],
+            'type'          => 'individual',
             'document_type' => 'CPF',
-            'document' => preg_replace('/\D/', '', $doador['cpf']),
-            'phones' => [
-                'mobile_phone' => $this->formatarTelefone($doador['telefone'] ?? ''),
-            ],
+            'document'      => preg_replace('/\D/', '', $doador['cpf'] ?? ''),
         ];
-    }
 
-    private function formatarTelefone(string $telefone): array
-    {
-        $digits = preg_replace('/\D/', '', $telefone);
-        return [
-            'country_code' => '55',
-            'area_code'    => substr($digits, 0, 2),
-            'number'       => substr($digits, 2),
-        ];
+        $telefone = preg_replace('/\D/', '', $doador['telefone'] ?? '');
+        if (strlen($telefone) >= 10) {
+            $cliente['phones'] = [
+                'mobile_phone' => [
+                    'country_code' => '55',
+                    'area_code'    => substr($telefone, 0, 2),
+                    'number'       => substr($telefone, 2),
+                ],
+            ];
+        }
+
+        return $cliente;
     }
 
     private function post(string $path, array $payload): array
     {
+        // Mascarar dados sensíveis no log
+        $logPayload = $payload;
+        if (isset($logPayload['payments'][0]['credit_card']['card']['number'])) {
+            $logPayload['payments'][0]['credit_card']['card']['number'] = '****';
+            $logPayload['payments'][0]['credit_card']['card']['cvv'] = '***';
+        }
+        Log::debug('[Pagarme] REQUEST', ['url' => $this->baseUrl . $path, 'payload' => $logPayload]);
+
         $response = Http::withBasicAuth($this->token, '')
             ->acceptJson()
             ->post($this->baseUrl . $path, $payload);
 
+        Log::debug('[Pagarme] RESPONSE', [
+            'status' => $response->status(),
+            'body'   => $response->json(),
+        ]);
+
         if ($response->failed()) {
-            $erro = $response->json('message')
-                ?? $response->json('errors.0.message')
-                ?? 'Erro ao comunicar com o gateway de pagamento.';
+            $body = $response->json();
+            $erro = $body['message']
+                ?? ($body['errors'][0]['message'] ?? null)
+                ?? ($body['error'] ?? null)
+                ?? json_encode($body);
+            Log::error('[Pagarme] ERRO', ['status' => $response->status(), 'full_body' => $body]);
             throw new Exception($erro);
         }
 
