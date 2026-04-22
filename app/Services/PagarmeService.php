@@ -10,10 +10,12 @@ class PagarmeService
 {
     private string $baseUrl = 'https://api.pagar.me/core/v5';
     private string $token;
+    private string $password;
 
     public function __construct()
     {
-        $this->token = config('services.pagarme.token');
+        $this->token    = config('services.pagarme.token');
+        $this->password = config('services.pagarme.password', '');
     }
 
     // ─── Cria um pedido PIX ────────────────────────────────────────────────────
@@ -43,6 +45,24 @@ class PagarmeService
         }
 
         $lastTransaction = $charge['last_transaction'] ?? [];
+
+        Log::debug('[Pagarme][PIX] charge completo', ['charge' => $charge]);
+        Log::debug('[Pagarme][PIX] last_transaction completo', ['last_transaction' => $lastTransaction]);
+        Log::debug('[Pagarme][PIX] campos extraídos', [
+            'charge_status'   => $charge['status'] ?? null,
+            'qr_code'         => $lastTransaction['qr_code'] ?? null,
+            'qr_code_url'     => $lastTransaction['qr_code_url'] ?? null,
+            'gateway_errors'  => $lastTransaction['gateway_response']['errors'] ?? null,
+            'acquirer_message'=> $lastTransaction['acquirer_message'] ?? null,
+        ]);
+
+        if (($charge['status'] ?? '') === 'failed') {
+            $msg = $lastTransaction['gateway_response']['errors'][0]['message']
+                ?? $lastTransaction['acquirer_message']
+                ?? 'PIX recusado pela Pagar.me. Verifique as configurações da conta.';
+            Log::error('[Pagarme][PIX] falhou', ['motivo' => $msg, 'last_transaction' => $lastTransaction]);
+            throw new Exception($msg);
+        }
 
         return [
             'order_id'     => $response['id'],
@@ -188,7 +208,7 @@ class PagarmeService
         }
         Log::debug('[Pagarme] REQUEST', ['url' => $this->baseUrl . $path, 'payload' => $logPayload]);
 
-        $response = Http::withBasicAuth($this->token, '')
+        $response = Http::withBasicAuth($this->token, $this->password)
             ->acceptJson()
             ->post($this->baseUrl . $path, $payload);
 

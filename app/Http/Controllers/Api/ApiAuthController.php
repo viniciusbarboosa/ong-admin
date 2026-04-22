@@ -80,6 +80,8 @@ class ApiAuthController extends Controller
 
         return response()->json(['message' => 'Perfil atualizado com sucesso.', 'user' => $user]);
     }
+
+    public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
 

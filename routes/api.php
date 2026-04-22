@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CourseShiftController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\DonationController;
 use App\Http\Controllers\Api\CourseApiController;
+use App\Http\Controllers\Api\PagarmeWebhookController;
 
 Route::post('/register', [ApiAuthController::class, 'register']);
 Route::post('/login', [ApiAuthController::class, 'login']);
@@ -43,3 +44,7 @@ Route::get('courses/{course}/shifts', [CourseShiftController::class, 'index']);
 Route::get('/courses', [CourseApiController::class, 'index']);
 Route::get('/courses/{course}/units', [CourseApiController::class, 'units']);
 Route::get('/courses/{course}/units/{unit}/shifts', [CourseApiController::class, 'shifts']);
+
+// ─── Webhook Pagar.me (sem autenticação — validado por assinatura HMAC) ───────
+Route::post('/webhooks/pagarme', [PagarmeWebhookController::class, 'handle'])
+    ->name('webhooks.pagarme');

@@ -36,7 +36,10 @@ return [
     ],
 
     'pagarme' => [
-        'token' => env('TOKEN_PAGARME'),
+        'token'            => env('TOKEN_PAGARME'),
+        'password'         => env('PAGARME_PASSWORD', ''),
+        'webhook_user'     => env('PAGARME_WEBHOOK_USER'),
+        'webhook_password' => env('PAGARME_WEBHOOK_PASSWORD'),
     ],
 
 ];
