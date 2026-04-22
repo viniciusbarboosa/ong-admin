@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Middleware\HandleCors;
 use App\Http\Middleware\HandleInertiaRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -18,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        $middleware->append(HandleCors::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
