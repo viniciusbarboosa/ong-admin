@@ -24,6 +24,7 @@ class PagarmeService
     {
         $payload = [
             'items' => [[
+                'code'        => 'DOACAO-PIX',
                 'amount'      => $valorCentavos,
                 'description' => 'Doação - Movimento Pró Criança',
                 'quantity'    => 1,
@@ -81,6 +82,7 @@ class PagarmeService
 
         $payload = [
             'items' => [[
+                'code'        => 'DOACAO-BOLETO',
                 'amount'      => $valorCentavos,
                 'description' => 'Doação - Movimento Pró Criança',
                 'quantity'    => 1,
@@ -104,12 +106,31 @@ class PagarmeService
 
         $lastTransaction = $charge['last_transaction'] ?? [];
 
+        Log::debug('[Pagarme][Boleto] charge completo', ['charge' => $charge]);
+        Log::debug('[Pagarme][Boleto] last_transaction completo', ['last_transaction' => $lastTransaction]);
+        Log::debug('[Pagarme][Boleto] campos extraídos', [
+            'charge_status'  => $charge['status'] ?? null,
+            'url'            => $lastTransaction['url'] ?? null,
+            'pdf'            => $lastTransaction['pdf'] ?? null,
+            'line'           => $lastTransaction['line'] ?? null,
+            'barcode'        => $lastTransaction['barcode'] ?? null,
+            'boleto_barcode' => $lastTransaction['boleto_barcode'] ?? null,
+            'gateway_errors' => $lastTransaction['gateway_response']['errors'] ?? null,
+        ]);
+
+        if (($charge['status'] ?? '') === 'failed') {
+            $msg = $lastTransaction['gateway_response']['errors'][0]['message']
+                ?? 'Boleto recusado pela Pagar.me. Verifique as configurações da conta.';
+            Log::error('[Pagarme][Boleto] falhou', ['motivo' => $msg, 'last_transaction' => $lastTransaction]);
+            throw new Exception($msg);
+        }
+
         return [
-            'order_id'   => $response['id'],
-            'charge_id'  => $charge['id'],
-            'status'     => $charge['status'],
-            'boleto_url'     => $lastTransaction['pdf'] ?? null,
-            'boleto_barcode' => $lastTransaction['line'] ?? null,
+            'order_id'       => $response['id'],
+            'charge_id'      => $charge['id'],
+            'status'         => $charge['status'],
+            'boleto_url'     => $lastTransaction['url'] ?? $lastTransaction['pdf'] ?? null,
+            'boleto_barcode' => $lastTransaction['barcode'] ?? $lastTransaction['line'] ?? null,
             'due_at'         => $vencimento,
         ];
     }
@@ -123,6 +144,7 @@ class PagarmeService
 
         $payload = [
             'items' => [[
+                'code'        => 'DOACAO-CARTAO',
                 'amount'      => $valorCentavos,
                 'description' => 'Doação - Movimento Pró Criança',
                 'quantity'    => 1,
