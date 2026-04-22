@@ -49,14 +49,6 @@ class LoginRequest extends FormRequest
             ]);
         }
 
-        if (Auth::user()->type != 'A') {
-            Auth::logout();
-            RateLimiter::hit($this->throttleKey());
-            throw ValidationException::withMessages([
-                'email' => 'Apenas usuários do tipo A podem acessar o sistema.',
-            ]);
-        }
-
         RateLimiter::clear($this->throttleKey());
     }
 
