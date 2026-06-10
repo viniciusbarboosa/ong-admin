@@ -54,6 +54,11 @@ const mainNavItems: NavItem[] = [
                 url: '/sobre-nos',
                 icon: Info,
             },
+            {
+                title: 'Fale Conosco',
+                url: '/fale-conosco',
+                icon: MessageCircle,
+            },
         ],
     }, {
         title: 'Administradores',

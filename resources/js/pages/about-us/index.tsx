@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, useForm } from '@inertiajs/react';
+import { useRef, useState } from 'react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Sobre Nós', href: '/sobre-nos' },
@@ -9,18 +10,35 @@ const breadcrumbs: BreadcrumbItem[] = [
 interface AboutUsData {
     id?: number;
     content: string;
+    image?: string | null;
     active: boolean;
 }
 
 export default function AboutUsIndex({ about }: { about: AboutUsData | null }) {
-    const { data, setData, put, processing, errors, reset } = useForm({
+    const fileRef = useRef<HTMLInputElement>(null);
+
+    const { data, setData, post, processing, errors, reset } = useForm({
         content: about?.content || '',
         active: about?.active ?? true,
     });
 
+    const [preview, setPreview] = useState<string | null>(about?.image || null);
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setPreview(URL.createObjectURL(file));
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        put(route('sobre-nos.update'));
+        post(route('sobre-nos.update'), {
+            forceFormData: true,
+            onSuccess: () => {
+                if (fileRef.current) fileRef.current.value = '';
+            },
+        });
     };
 
     return (
@@ -47,6 +65,28 @@ export default function AboutUsIndex({ about }: { about: AboutUsData | null }) {
                                     placeholder="Escreva aqui o conteúdo da página Sobre Nós..."
                                 />
                                 {errors.content && <span className="text-xs text-red-500">{errors.content}</span>}
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Imagem (opcional)</label>
+                                <input
+                                    ref={fileRef}
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                        setData('image', e.target.files?.[0] || (null as any));
+                                        handleFileChange(e);
+                                    }}
+                                    className="w-full rounded-lg border border-sidebar-border bg-transparent p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#3043B8] file:px-3 file:py-1 file:text-xs file:text-white"
+                                />
+                                {errors.image && <span className="text-xs text-red-500">{errors.image}</span>}
+                                {preview && (
+                                    <img
+                                        src={preview}
+                                        alt="Preview"
+                                        className="mt-2 h-40 w-full rounded-lg object-cover"
+                                    />
+                                )}
                             </div>
 
                             <div className="flex items-center gap-2">

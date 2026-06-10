@@ -5,6 +5,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EnrollmentAdminController;
 use App\Http\Controllers\AdminUserController;
+use App\Http\Controllers\ContactAdminController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DonationAdminController;
 use App\Http\Controllers\UnitController;
@@ -26,7 +27,7 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/cursos', [CourseController::class, 'index'])->name('cursos');
     Route::post('/cursos', [CourseController::class, 'store'])->name('cursos.store');
-    Route::put('/cursos/{course}', [CourseController::class, 'update'])->name('cursos.update');
+    Route::post('/cursos/{course}', [CourseController::class, 'update'])->name('cursos.update');
     Route::delete('/cursos/{course}', [CourseController::class, 'destroy'])->name('cursos.destroy');
 });
 
@@ -97,7 +98,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 //ABOUT US
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/sobre-nos', [\App\Http\Controllers\AboutUsAdminController::class, 'index'])->name('sobre-nos.index');
-    Route::put('/sobre-nos', [\App\Http\Controllers\AboutUsAdminController::class, 'update'])->name('sobre-nos.update');
+    Route::post('/sobre-nos', [\App\Http\Controllers\AboutUsAdminController::class, 'update'])->name('sobre-nos.update');
+});
+
+//FALE CONOSCO
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/fale-conosco', [ContactAdminController::class, 'index'])->name('fale-conosco.index');
+    Route::put('/fale-conosco', [ContactAdminController::class, 'update'])->name('fale-conosco.update');
 });
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

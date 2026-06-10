@@ -61,6 +61,9 @@ Route::get('/journeys', [\App\Http\Controllers\Api\JourneyController::class, 'in
 // Sobre Nós — público
 Route::get('/about-us', [\App\Http\Controllers\Api\AboutUsController::class, 'index']);
 
+// Contato — público
+Route::get('/contacts', [\App\Http\Controllers\Api\ContactController::class, 'index']);
+
 // ─── Webhook Pagar.me (sem autenticação — validado por assinatura HMAC) ───────
 Route::post('/webhooks/pagarme', [PagarmeWebhookController::class, 'handle'])
     ->name('webhooks.pagarme');

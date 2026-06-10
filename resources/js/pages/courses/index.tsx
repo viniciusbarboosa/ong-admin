@@ -24,6 +24,7 @@ interface Course {
     title: string;
     description: string | null;
     workload: number | null;
+    image: string | null;
     shifts: CourseShift[];
     units: Unit[];
 }
@@ -40,6 +41,7 @@ interface CourseForm {
     title: string;
     description: string;
     workload: string | number;
+    image: File | string;
     shifts: CourseShift[];
     unit_ids: number[];
 }
@@ -88,6 +90,7 @@ export default function CourseIndex({
             title: '',
             description: '',
             workload: '',
+            image: '',
             shifts: [],
             unit_ids: [],
         });
@@ -99,6 +102,7 @@ export default function CourseIndex({
                 title: course.title,
                 description: course.description || '',
                 workload: course.workload || '',
+                image: course.image || '',
                 shifts: course.shifts.map((s) => ({
                     ...s,
                     description: s.description || '',
@@ -125,10 +129,11 @@ export default function CourseIndex({
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        const opts = { forceFormData: true, onSuccess: closeModal };
         if (editingCourse) {
-            put(route('cursos.update', editingCourse.id), { onSuccess: closeModal });
+            put(route('cursos.update', editingCourse.id), opts);
         } else {
-            post(route('cursos.store'), { onSuccess: closeModal });
+            post(route('cursos.store'), opts);
         }
     };
 
@@ -419,6 +424,24 @@ export default function CourseIndex({
                                     />
                                     {errors.workload && (
                                         <span className="text-xs text-red-500">{errors.workload}</span>
+                                    )}
+                                </div>
+
+                                <div className="sm:col-span-2">
+                                    <label className="block text-sm font-medium mb-1">Imagem (opcional)</label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={(e) => setData('image', e.target.files?.[0] || ('' as any))}
+                                        className="w-full rounded-lg border border-sidebar-border bg-transparent p-2 text-sm file:mr-3 file:rounded file:border-0 file:bg-[#3043B8] file:px-3 file:py-1 file:text-xs file:text-white"
+                                    />
+                                    {errors.image && <span className="text-xs text-red-500">{errors.image}</span>}
+                                    {data.image && typeof data.image === 'string' && (
+                                        <img
+                                            src={data.image}
+                                            alt="Preview"
+                                            className="mt-2 h-32 w-full rounded-lg object-cover"
+                                        />
                                     )}
                                 </div>
                             </div>

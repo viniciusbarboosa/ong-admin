@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\CourseShift;
 use App\Models\Unit;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class CourseController extends Controller
 {
@@ -35,6 +36,7 @@ class CourseController extends Controller
             'title'                      => 'required|string|max:255',
             'description'                => 'nullable|string',
             'workload'                   => 'nullable|integer|min:1',
+            'image'                      => 'nullable|image|max:5120',
             'shifts'                     => 'required|array|min:1',
             'shifts.*.shift'             => 'required|in:manha,tarde,noite',
             'shifts.*.description'       => 'nullable|string|max:255',
@@ -53,6 +55,11 @@ class CourseController extends Controller
             'workload'    => $validated['workload'] ?? null,
         ]);
 
+        if ($request->hasFile('image')) {
+            $course->image = $request->file('image')->store('courses', 'public');
+            $course->save();
+        }
+
         foreach ($validated['shifts'] as $shiftData) {
             $course->shifts()->create($shiftData);
         }
@@ -70,6 +77,7 @@ class CourseController extends Controller
             'title'                      => 'required|string|max:255',
             'description'                => 'nullable|string',
             'workload'                   => 'nullable|integer|min:1',
+            'image'                      => 'nullable|image|max:5120',
             'shifts'                     => 'required|array|min:1',
             'shifts.*.id'                => 'nullable|integer|exists:course_shifts,id',
             'shifts.*.shift'             => 'required|in:manha,tarde,noite',
@@ -88,6 +96,14 @@ class CourseController extends Controller
             'description' => $validated['description'] ?? null,
             'workload'    => $validated['workload'] ?? null,
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($course->image) {
+                Storage::disk('public')->delete($course->image);
+            }
+            $course->image = $request->file('image')->store('courses', 'public');
+            $course->save();
+        }
 
         // Remove turnos que não estão mais presentes
         $existingIds = collect($validated['shifts'])->pluck('id')->filter()->toArray();
@@ -123,6 +139,9 @@ class CourseController extends Controller
 
     public function destroy(Course $course)
     {
+        if ($course->image) {
+            Storage::disk('public')->delete($course->image);
+        }
         $course->delete();
         return back()->with('success', 'Curso removido.');
     }

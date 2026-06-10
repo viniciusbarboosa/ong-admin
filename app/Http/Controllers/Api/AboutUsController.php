@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\AboutUs;
+use Illuminate\Support\Facades\Storage;
 
 class AboutUsController extends Controller
 {
@@ -14,6 +15,7 @@ class AboutUsController extends Controller
         return response()->json($about ? [
             'id'      => $about->id,
             'content' => $about->content,
+            'image'   => $about->image ? url(Storage::url($about->image)) : null,
         ] : null);
     }
 }

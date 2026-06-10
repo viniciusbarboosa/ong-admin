@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Unit;
+use Illuminate\Support\Facades\Storage;
 
 class CourseApiController extends Controller
 {
@@ -22,6 +23,7 @@ class CourseApiController extends Controller
                 'title'       => $course->title,
                 'description' => $course->description,
                 'workload'    => $course->workload,
+                'image'       => $course->image ? url(Storage::url($course->image)) : null,
                 'shifts'      => $course->shifts->map(fn($s) => [
                     'id'           => $s->id,
                     'shift'        => $s->shift,

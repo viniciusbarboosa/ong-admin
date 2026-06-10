@@ -13,6 +13,7 @@ class Course extends Model
         'title',
         'description',
         'workload',
+        'image',
     ];
 
     public function shifts()
