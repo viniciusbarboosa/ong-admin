@@ -11,11 +11,18 @@ export default defineConfig({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
             ssr: 'resources/js/ssr.jsx',
             refresh: true,
+            valet: false,
         }),
         react(),
         tailwindcss(),
     ],
     esbuild: {
         jsx: 'automatic',
+    },
+    server: {
+        host: '0.0.0.0',
+        hmr: {
+            host: '192.168.1.4',
+        },
     },
 });

@@ -23,7 +23,7 @@ class EnrollmentAdminController extends Controller
     public function updateStatus(Request $request, Enrollment $enrollment)
     {
         $request->validate([
-            'status' => 'required|in:accepted,rejected'
+            'status' => 'required|in:accepted,rejected,finished'
         ]);
 
         $enrollment->update([

@@ -61,5 +61,43 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/usuarios', [UserController::class, 'index'])->name('usuarios.index');
     Route::patch('/usuarios/{user}/status', [UserController::class, 'toggleStatus'])->name('usuarios.status');
 });
+
+//TESTIMONIALS
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/depoimentos', [\App\Http\Controllers\TestimonialAdminController::class, 'index'])->name('depoimentos.index');
+    Route::post('/depoimentos', [\App\Http\Controllers\TestimonialAdminController::class, 'store'])->name('depoimentos.store');
+    Route::put('/depoimentos/{testimonial}', [\App\Http\Controllers\TestimonialAdminController::class, 'update'])->name('depoimentos.update');
+    Route::delete('/depoimentos/{testimonial}', [\App\Http\Controllers\TestimonialAdminController::class, 'destroy'])->name('depoimentos.destroy');
+});
+
+//PILLARS
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/pilares', [\App\Http\Controllers\PillarAdminController::class, 'index'])->name('pilares.index');
+    Route::post('/pilares', [\App\Http\Controllers\PillarAdminController::class, 'store'])->name('pilares.store');
+    Route::put('/pilares/{pillar}', [\App\Http\Controllers\PillarAdminController::class, 'update'])->name('pilares.update');
+    Route::delete('/pilares/{pillar}', [\App\Http\Controllers\PillarAdminController::class, 'destroy'])->name('pilares.destroy');
+});
+
+//IMPACTS
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/impacto', [\App\Http\Controllers\ImpactAdminController::class, 'index'])->name('impacto.index');
+    Route::post('/impacto', [\App\Http\Controllers\ImpactAdminController::class, 'store'])->name('impacto.store');
+    Route::put('/impacto/{impact}', [\App\Http\Controllers\ImpactAdminController::class, 'update'])->name('impacto.update');
+    Route::delete('/impacto/{impact}', [\App\Http\Controllers\ImpactAdminController::class, 'destroy'])->name('impacto.destroy');
+});
+
+//JOURNEYS
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/jornada', [\App\Http\Controllers\JourneyAdminController::class, 'index'])->name('jornada.index');
+    Route::post('/jornada', [\App\Http\Controllers\JourneyAdminController::class, 'store'])->name('jornada.store');
+    Route::put('/jornada/{journey}', [\App\Http\Controllers\JourneyAdminController::class, 'update'])->name('jornada.update');
+    Route::delete('/jornada/{journey}', [\App\Http\Controllers\JourneyAdminController::class, 'destroy'])->name('jornada.destroy');
+});
+
+//ABOUT US
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/sobre-nos', [\App\Http\Controllers\AboutUsAdminController::class, 'index'])->name('sobre-nos.index');
+    Route::put('/sobre-nos', [\App\Http\Controllers\AboutUsAdminController::class, 'update'])->name('sobre-nos.update');
+});
 require __DIR__.'/settings.php';
 require __DIR__.'/auth.php';

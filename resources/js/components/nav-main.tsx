@@ -1,24 +1,66 @@
-import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarMenuSub, SidebarMenuSubButton, SidebarMenuSubItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronRight } from 'lucide-react';
 
 export function NavMain({ items = [] }: { items: NavItem[] }) {
-    const page = usePage();
     return (
         <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>Platform</SidebarGroupLabel>
+            <SidebarGroupLabel>Geral</SidebarGroupLabel>
             <SidebarMenu>
-                {items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={item.url === page.url}>
-                            <Link href={item.url} prefetch>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
+                {items.map((item) => {
+                    if (item.children) {
+                        return <NavCollapsibleItem key={item.title} item={item} />;
+                    }
+                    return <NavLinkItem key={item.title} item={item} />;
+                })}
             </SidebarMenu>
         </SidebarGroup>
+    );
+}
+
+function NavLinkItem({ item }: { item: NavItem }) {
+    const page = usePage();
+    return (
+        <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={item.url === page.url}>
+                <Link href={item.url} prefetch>
+                    {item.icon && <item.icon />}
+                    <span>{item.title}</span>
+                </Link>
+            </SidebarMenuButton>
+        </SidebarMenuItem>
+    );
+}
+
+function NavCollapsibleItem({ item }: { item: NavItem }) {
+    const page = usePage();
+    const isActive = item.children?.some((child) => child.url === page.url) ?? false;
+    return (
+        <Collapsible defaultOpen={isActive} className="group/collapsible">
+            <SidebarMenuItem>
+                <CollapsibleTrigger asChild>
+                    <SidebarMenuButton tooltip={item.title}>
+                        {item.icon && <item.icon />}
+                        <span>{item.title}</span>
+                        <ChevronRight className="ml-auto transition-transform group-data-[state=open]/collapsible:rotate-90" />
+                    </SidebarMenuButton>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <SidebarMenuSub>
+                        {item.children.map((child) => (
+                            <SidebarMenuSubItem key={child.title}>
+                                <SidebarMenuSubButton asChild isActive={child.url === page.url}>
+                                    <Link href={child.url} prefetch>
+                                        <span>{child.title}</span>
+                                    </Link>
+                                </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                        ))}
+                    </SidebarMenuSub>
+                </CollapsibleContent>
+            </SidebarMenuItem>
+        </Collapsible>
     );
 }

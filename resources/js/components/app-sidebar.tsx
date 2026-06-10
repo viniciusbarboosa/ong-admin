@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Building2, Folder, GraduationCap, LayoutGrid, ClipboardCheck, Users, HandCoins, UserRound  } from 'lucide-react';
+import { BookOpen, Building2, GraduationCap, LayoutGrid, ClipboardCheck, Users, HandCoins, UserRound, MessageCircle, Target, Heart, MapPin, Info } from 'lucide-react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -24,6 +24,37 @@ const mainNavItems: NavItem[] = [
         title: 'Inscrições',
         url: '/inscricoes',
         icon: ClipboardCheck,
+    }, {
+        title: 'Instituição',
+        url: '#',
+        icon: Heart,
+        children: [
+            {
+                title: 'Missão, Visão e Valores',
+                url: '/pilares',
+                icon: Target,
+            },
+            {
+                title: 'Nosso Impacto',
+                url: '/impacto',
+                icon: MapPin,
+            },
+            {
+                title: 'Depoimentos',
+                url: '/depoimentos',
+                icon: MessageCircle,
+            },
+            {
+                title: 'Nossa Jornada',
+                url: '/jornada',
+                icon: BookOpen,
+            },
+            {
+                title: 'Sobre Nós',
+                url: '/sobre-nos',
+                icon: Info,
+            },
+        ],
     }, {
         title: 'Administradores',
         url: '/administradores',

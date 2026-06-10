@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, router, Link } from '@inertiajs/react';
-import { Check, X, FileText, ExternalLink } from 'lucide-react';
+import { Check, X, FileText, ExternalLink, Award } from 'lucide-react';
 
 interface CourseShift {
     shift: 'manha' | 'tarde' | 'noite';
@@ -11,7 +11,7 @@ interface CourseShift {
 
 interface Enrollment {
     id: number;
-    status: 'pending' | 'accepted' | 'rejected';
+    status: 'pending' | 'accepted' | 'rejected' | 'finished';
     is_anonymous: boolean;
     full_name: string | null;
     cpf: string | null;
@@ -48,14 +48,21 @@ export default function EnrollmentIndex({
 }: {
     enrollments: PaginatedData<Enrollment>;
 }) {
-    const statusTranslate = {
+    const statusTranslate: Record<string, string> = {
         pending: 'Pendente',
         accepted: 'Aprovado',
         rejected: 'Rejeitado',
+        finished: 'Concluído',
     };
 
-    const handleUpdateStatus = (id: number, newStatus: 'accepted' | 'rejected') => {
-        const acao = newStatus === 'accepted' ? 'APROVAR' : 'REJEITAR';
+    const actionLabels: Record<string, string> = {
+        accepted: 'APROVAR',
+        rejected: 'REJEITAR',
+        finished: 'CONCLUIR',
+    };
+
+    const handleUpdateStatus = (id: number, newStatus: 'accepted' | 'rejected' | 'finished') => {
+        const acao = actionLabels[newStatus];
         if (confirm(`Tem certeza que deseja ${acao} esta inscrição?`)) {
             router.patch(
                 route('inscricoes.status', id),
@@ -182,6 +189,8 @@ export default function EnrollmentIndex({
                                                                 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                                 : item.status === 'rejected'
                                                                 ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                                : item.status === 'finished'
+                                                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                                                                 : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
                                                         }`}
                                                     >
@@ -227,6 +236,27 @@ export default function EnrollmentIndex({
                                                                 size={22}
                                                                 className={
                                                                     item.status === 'rejected'
+                                                                        ? ''
+                                                                        : 'group-hover:scale-110'
+                                                                }
+                                                            />
+                                                        </button>
+                                                        <button
+                                                            onClick={() =>
+                                                                handleUpdateStatus(item.id, 'finished')
+                                                            }
+                                                            disabled={item.status === 'finished' || item.status !== 'accepted'}
+                                                            className={`group p-2 rounded-lg transition-all ${
+                                                                item.status === 'finished' || item.status !== 'accepted'
+                                                                    ? 'opacity-20 cursor-not-allowed text-neutral-400'
+                                                                    : 'text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                                                            }`}
+                                                            title="Concluir Curso"
+                                                        >
+                                                            <Award
+                                                                size={22}
+                                                                className={
+                                                                    item.status === 'finished'
                                                                         ? ''
                                                                         : 'group-hover:scale-110'
                                                                 }

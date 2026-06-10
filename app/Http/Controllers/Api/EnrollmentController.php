@@ -61,9 +61,31 @@ class EnrollmentController extends Controller
         return response()->json(['message' => 'Inscrição cancelada com sucesso.']);
     }
 
+    /**
+     * PATCH /api/enrollments/{enrollment}/finish
+     * Marca uma inscrição como concluída (curso finalizado).
+     */
+    public function finish(Request $request, Enrollment $enrollment)
+    {
+        if ($enrollment->user_id !== $request->user()->id) {
+            return response()->json(['message' => 'Acesso negado.'], 403);
+        }
+
+        if ($enrollment->status !== 'accepted') {
+            return response()->json([
+                'message' => 'Apenas inscrições aceitas podem ser concluídas.',
+            ], 422);
+        }
+
+        $enrollment->update(['status' => 'finished']);
+
+        return response()->json(['message' => 'Curso concluído com sucesso!']);
+    }
+
     public function enroll(Request $request)
     {
-        //image max 2048
+        $cpfRule = $request->user() ? 'nullable|string|max:14' : 'required|string|max:14';
+
         $validated = $request->validate([
             'course_id' => 'required|exists:courses,id',
             'course_shift_id'  => 'required|exists:course_shifts,id',
@@ -71,7 +93,7 @@ class EnrollmentController extends Controller
             'rg_back'   => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'full_name' => 'nullable|string|max:255',
             'phone'     => 'nullable|string|max:15',
-            'cpf'       => 'nullable|string|max:14',
+            'cpf'       => $cpfRule,
         ]);
 
         // Usuário autenticado ou anônimo
@@ -79,38 +101,10 @@ class EnrollmentController extends Controller
         $isAnonymous = is_null($user);
         $token       = null;
 
-        // Se anônimo e enviou CPF, cria/recupera uma conta mínima para vincular a inscrição
-        if ($isAnonymous && $request->filled('cpf')) {
-            $cpf  = preg_replace('/\D/', '', $request->cpf);
-
-            $existingUser = User::where('cpf', $cpf)->first();
-
-            // Se já existe uma conta real (com senha definida pelo usuário), exige login
-            if ($existingUser) {
-                // Verifica se a senha é a senha padrão (CPF) — conta criada automaticamente pelo app
-                $isAutoAccount = Hash::check($cpf, $existingUser->password);
-
-                if (!$isAutoAccount) {
-                    // Conta com senha personalizada: o usuário deve fazer login para continuar
-                    return response()->json([
-                        'message' => 'Este CPF já possui uma conta. Faça login para continuar.',
-                        'code'    => 'account_exists',
-                    ], 409);
-                }
-            }
-
-            $user = User::firstOrCreate(
-                ['cpf' => $cpf],
-                [
-                    'name'     => $request->full_name ?? 'Usuário',
-                    'email'    => $cpf . '@app.procrianca.local',
-                    'password' => Hash::make($cpf),
-                    'cpf'      => $cpf,
-                ]
-            );
-            $isAnonymous = false;
-            $token = $user->createToken('mobile')->plainTextToken;
-        }
+        // Extrai CPF (da requisição ou do perfil do usuário autenticado)
+        $cpf = $request->filled('cpf')
+            ? preg_replace('/\D/', '', $request->cpf)
+            : ($user?->cpf ?? null);
 
         // Valida se a unidade oferece este curso
         $course = Course::findOrFail($request->course_id);
@@ -136,22 +130,53 @@ class EnrollmentController extends Controller
             return response()->json(['message' => 'Este turno já está lotado.'], 400);
         }
 
-        // Verifica inscrição duplicada (apenas para usuários autenticados)
-        // Inscrições canceladas não contam — o usuário pode se re-inscrever
-        if (!$isAnonymous) {
-            $exists = Enrollment::where('user_id', $user->id)
-                        ->where('course_id', $validated['course_id'])
-                        ->whereNotIn('status', ['cancelled'])
-                        ->exists();
-            if ($exists) {
-                return response()->json(['message' => 'Você já está inscrito neste curso.'], 400);
+        // Verifica inscrição duplicada por user_id (autenticado) ou CPF (anônimo)
+        $existsQuery = Enrollment::where('course_id', $validated['course_id'])
+            ->whereNotIn('status', ['cancelled', 'finished']);
+
+        if ($user) {
+            $existsQuery->where('user_id', $user->id);
+        } elseif ($cpf) {
+            $existsQuery->where('cpf', $cpf);
+        }
+
+        if ($existsQuery->exists()) {
+            return response()->json(['message' => 'Você já está inscrito neste curso.'], 400);
+        }
+
+        // Cria/recupera conta automática para anônimos com CPF
+        if ($isAnonymous && $cpf) {
+            $existingUser = User::where('cpf', $cpf)->first();
+
+            // Se já existe uma conta real (com senha definida pelo usuário), exige login
+            if ($existingUser) {
+                $isAutoAccount = Hash::check($cpf, $existingUser->password);
+
+                if (!$isAutoAccount) {
+                    return response()->json([
+                        'message' => 'Este CPF já possui uma conta. Faça login para continuar.',
+                        'code'    => 'account_exists',
+                    ], 409);
+                }
             }
+
+            $user = User::firstOrCreate(
+                ['cpf' => $cpf],
+                [
+                    'name'     => $request->full_name ?? 'Usuário',
+                    'email'    => $cpf . '@app.procrianca.local',
+                    'password' => Hash::make($cpf),
+                    'cpf'      => $cpf,
+                ]
+            );
+            $isAnonymous = false;
+            $token = $user->createToken('mobile')->plainTextToken;
         }
 
         // Verifica conflito de horário/dias com outras inscrições ativas do usuário
-        if (!$isAnonymous) {
+        if ($user) {
             $activeEnrollments = Enrollment::where('user_id', $user->id)
-                ->whereNotIn('status', ['cancelled', 'rejected'])
+                ->whereNotIn('status', ['cancelled', 'rejected', 'finished'])
                 ->where('course_id', '!=', $validated['course_id'])
                 ->with('shift.course')
                 ->get();
@@ -211,9 +236,8 @@ class EnrollmentController extends Controller
             'rg_front_path'   => $rgFrontPath,
             'rg_back_path'    => $rgBackPath,
             'is_anonymous'    => $isAnonymous,
-            // Se autenticado e o campo não veio no payload, usa os dados do User
             'full_name'       => $request->full_name ?? $user?->name ?? null,
-            'cpf'             => $request->cpf       ?? $user?->cpf  ?? null,
+            'cpf'             => $cpf,
             'phone'           => $request->phone     ?? $user?->phone ?? null,
         ]);
 

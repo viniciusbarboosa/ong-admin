@@ -32,6 +32,7 @@ Route::post('/enroll', [EnrollmentController::class, 'enroll']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/enrollments', [EnrollmentController::class, 'index']);
     Route::delete('/enrollments/{enrollment}', [EnrollmentController::class, 'cancel']);
+    Route::patch('/enrollments/{enrollment}/finish', [EnrollmentController::class, 'finish']);
 });
 
 //ANONYMOUS DONATIONS
@@ -44,6 +45,21 @@ Route::get('courses/{course}/shifts', [CourseShiftController::class, 'index']);
 Route::get('/courses', [CourseApiController::class, 'index']);
 Route::get('/courses/{course}/units', [CourseApiController::class, 'units']);
 Route::get('/courses/{course}/units/{unit}/shifts', [CourseApiController::class, 'shifts']);
+
+// Depoimentos — público (lista apenas ativos)
+Route::get('/testimonials', [\App\Http\Controllers\Api\TestimonialController::class, 'index']);
+
+// Pilares (missão, visão, valores) — público
+Route::get('/pillars', [\App\Http\Controllers\Api\PillarController::class, 'index']);
+
+// Nosso Impacto — público
+Route::get('/impacts', [\App\Http\Controllers\Api\ImpactController::class, 'index']);
+
+// Nossa Jornada — público
+Route::get('/journeys', [\App\Http\Controllers\Api\JourneyController::class, 'index']);
+
+// Sobre Nós — público
+Route::get('/about-us', [\App\Http\Controllers\Api\AboutUsController::class, 'index']);
 
 // ─── Webhook Pagar.me (sem autenticação — validado por assinatura HMAC) ───────
 Route::post('/webhooks/pagarme', [PagarmeWebhookController::class, 'handle'])
